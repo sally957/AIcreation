@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Gallery</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: { 950: '#08080c', 900: '#0f0f16', 800: '#1a1a26', 700: '#2a2a3c' }
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 自訂滾動條 */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #0f0f16; }
+    ::-webkit-scrollbar-thumb { background: #3a3a4d; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #5a5a7a; }
+
+    /* 瀑布流/不規則排列機制 */
+    .masonry-grid {
+      columns: 1;
+      column-gap: 1.5rem;
+    }
+    @media (min-width: 640px) { .masonry-grid { columns: 2; } }
+    @media (min-width: 1024px) { .masonry-grid { columns: 3; } }
+    @media (min-width: 1280px) { .masonry-grid { columns: 4; } }
+    
+    .masonry-item {
+      break-inside: avoid;
+      margin-bottom: 1.5rem;
+    }
+
+    /* 側邊欄與主內容過渡動畫 */
+    .sidebar { transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+    .main-content { transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+
+.main-content {
+  margin-left: 1.5rem;
+}
+
+    /* 影片卡片懸停效果 */
+    .video-wrapper {
+      position: relative;
+      overflow: hidden;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #1a1a26 0%, #0f0f16 100%);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .video-wrapper:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+    }
+    .video-wrapper video {
+      width: 100%;
+      display: block;
+      object-fit: cover;
+      transition: filter 0.3s ease;
+    }
+    .video-wrapper:hover video {
+      filter: brightness(1.15) contrast(1.05);
+    }
+  </style>
+</head>
+<body class="bg-dark-950 text-gray-200 antialiased min-h-screen flex flex-col font-sans">
+
+  <!-- Top Banner -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-dark-900/85 backdrop-blur-md border-b border-dark-800 h-16">
+    <div class="max-w-[1920px] mx-auto px-4 h-full flex items-center justify-between">
+      <!-- 左側：目錄/選單 & 標題 -->
+      <div class="flex items-center gap-3 md:gap-5">
+        <!-- 修正：僅在螢幕寬度 < 1024px 時顯示目錄按鈕 (2欄狀態) -->
+        <button id="header-menu-toggle" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-dark-700 transition-colors text-sm font-medium text-gray-300 hover:text-white border border-dark-700 hover:border-dark-600 lg:hidden" aria-label="Toggle Sidebar">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          <span>目錄</span>
+        </button>
+        <!-- 響應式標題：小螢幕預設內縮 -->
+        <h1 class="text-lg md:text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 hidden md:block">
+          VIDEO GALLERY
+        </h1>
+      </div>
+
+      <!-- 右側：Email & 官方LINE -->
+      <div class="flex items-center gap-3 md:gap-5 text-sm font-medium">
+        <a href="mailto:app.coder99@gmail.com" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-dark-700 transition-colors text-gray-300 hover:text-white">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+          <span class="hidden sm:inline">Email</span>
+        </a>
+        <a href="https://page.line.me/078ntzqb" target="_blank" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-dark-700 transition-colors text-gray-300 hover:text-green-400">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19.333 3.866H4.667C3.635 3.866 2.8 4.68 2.8 5.68v8.64c0 1 .835 1.814 1.867 1.814h14.666c1.032 0 1.867-.814 1.867-1.814v-8.64c0-1-.835-1.814-1.867-1.814zM10.1 14.65h-1.2v-3.8l-1.6 2.4h-.6l-1.6-2.4v3.8H4v-5.1h1.2l1.9 2.7 1.9-2.7h1.1v5.1zm5.9 0h-1.2v-3.8l-1.6 2.4h-.6l-1.6-2.4v3.8h-1.2v-5.1h1.2l1.9 2.7 1.9-2.7h1.1v5.1zm5.7-5.1h-1.2v5.1h-1.2V9.55h-1.2v5.1H17V9.55h-1.2v5.1h-1.1V8.45h3.9v1.1z"/></svg>
+          <span class="hidden sm:inline">官方LINE</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 左側收合式目錄/選單 -->
+  <aside id="sidebar" class="sidebar fixed left-0 top-16 bottom-0 w-64 bg-dark-900 border-r border-dark-800 z-40 transform -translate-x-full lg:translate-x-0 shadow-xl">
+    <nav class="p-5 space-y-2">
+      <a href="#" class="block px-4 py-3 rounded-xl bg-dark-700 text-white font-semibold shadow-sm">🎬 全部影片</a>
+      <a href="#" class="block px-4 py-3 rounded-xl hover:bg-dark-700 transition-colors text-gray-400 hover:text-white">🌿 自然風景</a>
+      <a href="#" class="block px-4 py-3 rounded-xl hover:bg-dark-700 transition-colors text-gray-400 hover:text-white">🏙️ 城市生活</a>
+      <a href="#" class="block px-4 py-3 rounded-xl hover:bg-dark-700 transition-colors text-gray-400 hover:text-white">🎨 抽象藝術</a>
+      <a href="#" class="block px-4 py-3 rounded-xl hover:bg-dark-700 transition-colors text-gray-400 hover:text-white">🏄 運動與極限</a>
+      <a href="#" class="block px-4 py-3 rounded-xl hover:bg-dark-700 transition-colors text-gray-400 hover:text-white">🤖 科技與未來</a>
+      <a href="#" class="block px-4 py-3 rounded-xl hover:bg-dark-700 transition-colors text-gray-400 hover:text-white">🎭 人物專訪</a>
+      
+      <!--<div class="pt-4 mt-4 border-t border-dark-800">
+        <p class="px-4 text-xs text-gray-500 uppercase tracking-widest mb-2">快速連結</p>
+        <a href="menu.html" class="block px-4 py-2 text-sm text-blue-400 hover:text-blue-300 hover:underline transition-all">前往完整目錄頁面 →</a>
+      </div>-->
+	  
+    </nav>
+  </aside>
+
+  <!-- 收合觸發 Icon (僅在小螢幕顯示或用於手動控制) -->
+  <button id="floating-menu-toggle" class="fixed bottom-6 left-6 z-50 lg:hidden bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg transition-transform hover:scale-105 focus:outline-none" aria-label="Toggle Sidebar">
+    <svg id="icon-menu" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    <svg id="icon-close" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+  </button>
+
+  <!-- Main Content -->
+  <main id="main" class="main-content flex-1 pt-20 lg:pl-64 px-4 md:px-8 pb-12">
+    <div class="masonry-grid max-w-7xl mx-auto">
+      
+      <!-- Video 1 -->
+      <article class="masonry-item group">
+        <div class="video-wrapper aspect-[3/4]">
+          <video loop muted playsinline preload="metadata" class="w-full h-full object-cover">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
+          </video>
+        </div>
+        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
+          這段影像捕捉了極光在夜空中舞動的瞬間，色彩漸層與光影交織，呈現出自然界最神秘的動態畫卷。透過低光源攝影技術，保留了星空的細節與光線的流動感。
+        </p>
+      </article>
+
+      <!-- Video 2 -->
+      <article class="masonry-item group">
+        <div class="video-wrapper aspect-video">
+          <video loop muted playsinline preload="metadata">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" type="video/mp4">
+          </video>
+        </div>
+        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
+          城市雨夜的街頭，霓虹燈光倒映在積水路面。車流劃過留下一道道光軌，行人匆匆的腳步與靜謐的建築形成強烈對比，展現都會節奏中的孤獨與浪漫。
+        </p>
+      </article>
+
+      <!-- Video 3 -->
+      <article class="masonry-item group">
+        <div class="video-wrapper aspect-[4/5]">
+          <video loop muted playsinline preload="metadata">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" type="video/mp4">
+          </video>
+        </div>
+        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
+          微距鏡頭下的植物生長過程，時間被濃縮成幾分鐘的視覺饗宴。葉片的舒展、露珠的凝結與滴落，展現生命最純粹的律動與張力。
+        </p>
+      </article>
+
+      <!-- Video 4 -->
+      <article class="masonry-item group">
+        <div class="video-wrapper aspect-square">
+          <video loop muted playsinline preload="metadata">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4" type="video/mp4">
+          </video>
+        </div>
+        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
+          抽象幾何圖形在數位空間中不斷變形與重組。色彩隨著背景音樂的節拍跳動，營造出沉浸式的視覺節奏感，適合用於現代藝術展覽與動態設計參考。
+        </p>
+      </article>
+
+      <!-- Video 5 -->
+      <article class="masonry-item group">
+        <div class="video-wrapper aspect-[16/10]">
+          <video loop muted playsinline preload="metadata">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4" type="video/mp4">
+          </video>
+        </div>
+        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
+          火山岩漿緩慢流動的特寫，高溫使空氣產生扭曲的光影效果。暗紅與熾黃交錯，展現地球內部蘊藏的巨大能量與原始美感。
+        </p>
+      </article>
+
+      <!-- Video 6 -->
+      <article class="masonry-item group">
+        <div class="video-wrapper aspect-[3/5]">
+          <video loop muted playsinline preload="metadata">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" type="video/mp4">
+          </video>
+        </div>
+        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
+          動畫短片中的角色表情與肢體動作捕捉，細膩呈現情感傳遞的瞬間。光影運算與材質貼圖技術結合，打造出具備電影級質感的虛擬世界。
+        </p>
+      </article>
+
+      <!-- Video 7 -->
+      <article class="masonry-item group">
+        <div class="video-wrapper aspect-video">
+          <video loop muted playsinline preload="metadata">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4" type="video/mp4">
+          </video>
+        </div>
+        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
+          越野車穿越沙丘的追蹤拍攝，揚起的沙塵與引擎的轟鳴形成聽視覺雙重震撼。動態穩定器確保了畫面在顛簸環境中的流暢度。
+        </p>
+      </article>
+
+      <!-- Video 8 -->
+      <article class="masonry-item group">
+        <div class="video-wrapper aspect-[2/3]">
+          <video loop muted playsinline preload="metadata">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" type="video/mp4">
+          </video>
+        </div>
+        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
+          科幻場景的實景合成演練，機械裝甲在廢墟中緩步前進。煙霧模擬與粒子特效層疊，營造出末世氛圍與未來科技的衝突美學。
+        </p>
+      </article>
+
+      <!-- Video 9 -->
+      <article class="masonry-item group">
+        <div class="video-wrapper aspect-[4/3]">
+          <video loop muted playsinline preload="metadata">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4" type="video/mp4">
+          </video>
+        </div>
+        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
+          產品動態展示的經典構圖，車身線條在逆光下勾勒出優美輪廓。鏡頭推拉與焦點切換精準控制，強調設計細節與工藝水準。
+        </p>
+      </article>
+    </div>
+  </main>
+
+  <!-- Bottom Footer -->
+  <footer class="bg-dark-900 border-t border-dark-800 py-8 text-center text-gray-500 text-sm lg:pl-64">
+    <p class="font-medium">© 2026 Video Gallery. All Rights Reserved.</p>
+    <!--<p class="mt-3 leading-relaxed">聯絡方式：mailto:app.coder99@gmail.com ｜ 官方LINE：@video_gallery</p>-->
+  </footer>
+
+  <script>
+    // DOM 元素抓取
+    const headerMenuToggle = document.getElementById('header-menu-toggle');
+    const floatingMenuToggle = document.getElementById('floating-menu-toggle');
+    const iconMenu = document.getElementById('icon-menu');
+    const iconClose = document.getElementById('icon-close');
+    const sidebar = document.getElementById('sidebar');
+    const main = document.getElementById('main');
+    const videos = document.querySelectorAll('video');
+
+    // 狀態管理
+    let isOpen = window.innerWidth >= 1024; // 桌面版預設展開，行動版預設收合
+
+    // 初始化 UI 狀態
+    function updateUI() {
+      if (isOpen) {
+        sidebar.classList.remove('-translate-x-full');
+        sidebar.classList.add('translate-x-0');
+        if(window.innerWidth < 1024) {
+          main.classList.add('ml-0'); // 行動版展開時不推擠主內容，改為浮層
+        } else {
+          main.classList.add('lg:pl-64'); // 桌面版恢復側邊欄間距
+        }
+        iconMenu.classList.add('hidden');
+        iconClose.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        sidebar.classList.remove('translate-x-0');
+        if(window.innerWidth < 1024) {
+          main.classList.remove('ml-0');
+        }
+        iconMenu.classList.remove('hidden');
+        iconClose.classList.add('hidden');
+      }
+    }
+
+    // 統一的選單切換函數
+    function toggleSidebar() {
+      isOpen = !isOpen;
+      updateUI();
+    }
+
+    // 頂部目錄按鈕點擊事件
+    headerMenuToggle?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSidebar();
+    });
+
+    // 浮動目錄按鈕點擊事件
+    floatingMenuToggle?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSidebar();
+    });
+
+    // 響應式斷點自動控制
+    window.addEventListener('resize', () => {
+      const isDesktop = window.innerWidth >= 1024; // 3欄/4欄 (1024px以上)
+      if (isDesktop) {
+        isOpen = true; // 大螢幕自動展開側邊欄
+      } else {
+        isOpen = false; // 小螢幕(2欄)自動收合側邊欄
+      }
+      updateUI();
+    });
+
+    // 點擊外部區域關閉側邊欄（行動版體驗優化）
+    document.addEventListener('click', (e) => {
+      if (!isOpen) return;
+      if (window.innerWidth >= 1024) return; // 桌面版保持展開
+      if (!sidebar.contains(e.target) && 
+          e.target !== headerMenuToggle && !headerMenuToggle?.contains(e.target) &&
+          e.target !== floatingMenuToggle && !floatingMenuToggle?.contains(e.target)) {
+        isOpen = false;
+        updateUI();
+      }
+    });
+
+    // 影片滑鼠滑過自動播放機制
+    videos.forEach(video => {
+      // 滑鼠進入播放
+      video.addEventListener('mouseenter', () => {
+        video.play().catch(() => {}); // 忽略瀏覽器阻擋 autoplay 的錯誤
+      });
+      // 滑鼠離開暫停
+      video.addEventListener('mouseleave', () => {
+        video.pause();
+      });
+      // 觸控支援（手機長按/點擊觸發）
+      video.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        video.play().catch(() => {});
+      });
+    });
+
+    // 頁面載入初始化
+    updateUI();
+  </script>
+</body>
+</html>
