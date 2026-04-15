@@ -1,357 +1,250 @@
 <!DOCTYPE html>
-<html lang="zh-TW" class="dark">
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Video Gallery</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            dark: { 950: '#08080c', 900: '#0f0f16', 800: '#1a1a26', 700: '#2a2a3c' }
-          },
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
-        }
-      }
-    }
-  </script>
-  <style>
-    /* 自訂滾動條 */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: #0f0f16; }
-    ::-webkit-scrollbar-thumb { background: #3a3a4d; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #5a5a7a; }
-
-    /* 瀑布流/不規則排列機制 */
-    .masonry-grid {
-      columns: 1;
-      column-gap: 1.5rem;
-    }
-    @media (min-width: 640px) { .masonry-grid { columns: 2; } }
-    @media (min-width: 1024px) { .masonry-grid { columns: 3; } }
-    @media (min-width: 1280px) { .masonry-grid { columns: 4; } }
-    
-    .masonry-item {
-      break-inside: avoid;
-      margin-bottom: 1.5rem;
-    }
-
-    /* 側邊欄與主內容過渡動畫 */
-    .sidebar { transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
-    .main-content { transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
-
-.main-content {
-  margin-left: 1.5rem;
-}
-
-    /* 影片卡片懸停效果 */
-    .video-wrapper {
-      position: relative;
-      overflow: hidden;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #1a1a26 0%, #0f0f16 100%);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .video-wrapper:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 28px rgba(0,0,0,0.6);
-    }
-    .video-wrapper video {
-      width: 100%;
-      display: block;
-      object-fit: cover;
-      transition: filter 0.3s ease;
-    }
-    .video-wrapper:hover video {
-      filter: brightness(1.15) contrast(1.05);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Gallery - 極致美學</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar for sidebar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        
+        /* Masonry layout using CSS columns */
+        .masonry-grid { column-count: 4; column-gap: 1rem; }
+        @media (max-width: 1536px) { .masonry-grid { column-count: 3; } }
+        @media (max-width: 1024px) { .masonry-grid { column-count: 2; } }
+        @media (max-width: 640px) { .masonry-grid { column-count: 1; } }
+        
+        .masonry-item { break-inside: avoid; margin-bottom: 1rem; }
+        
+        /* Video hover effects */
+        .video-container { position: relative; overflow: hidden; border-radius: 0.75rem; background: #1f2937; }
+        .video-container video { width: 100%; height: auto; display: block; transition: transform 0.3s ease; }
+        .video-container:hover video { transform: scale(1.02); }
+        
+        /* Description overlay */
+        .video-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, transparent 100%); padding: 1.5rem 1rem 1rem; transform: translateY(100%); transition: transform 0.3s ease; }
+        .video-container:hover .video-overlay { transform: translateY(0); }
+        
+        /* Sidebar transition */
+        .sidebar { transition: transform 0.3s ease-in-out; }
+        .menu-btn { transition: all 0.3s ease; }
+        .menu-btn:hover { transform: scale(1.05); }
+        .sidebar-overlay { transition: opacity 0.3s ease; }
+    </style>
 </head>
-<body class="bg-dark-950 text-gray-200 antialiased min-h-screen flex flex-col font-sans">
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+    
+    <!-- Top Banner -->
+    <header class="fixed top-0 left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-md border-b border-gray-800 h-16">
+        <div class="h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <button id="menuBtn" class="menu-btn lg:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition-colors" aria-label="Toggle Menu">
+                    <i class="fas fa-bars text-lg"></i>
+                </button>
+                <h1 class="hidden lg:block text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                    <i class="fas fa-play-circle mr-2 text-cyan-400"></i>Video Gallery
+                </h1>
+            </div>
+            
+            <div class="flex items-center gap-4 sm:gap-6">
+                <a href="mailto:app.coder99@gmail.com" class="flex items-center gap-2 text-sm text-gray-400 hover:text-cyan-400 transition-colors group">
+                    <i class="fas fa-envelope text-lg group-hover:scale-110 transition-transform"></i>
+                    <span class="hidden sm:inline">Email</span>
+                </a>
+                <a href="https://page.line.me/078ntzqb" class="flex items-center gap-2 text-sm text-gray-400 hover:text-green-400 transition-colors group">
+                    <i class="fab fa-line text-xl group-hover:scale-110 transition-transform"></i>
+                    <span class="hidden sm:inline">官方LINE</span>
+                </a>
+            </div>
+        </div>
+    </header>
 
-  <!-- Top Banner -->
-  <header class="fixed top-0 left-0 right-0 z-50 bg-dark-900/85 backdrop-blur-md border-b border-dark-800 h-16">
-    <div class="max-w-[1920px] mx-auto px-4 h-full flex items-center justify-between">
-      <!-- 左側：目錄/選單 & 標題 -->
-      <div class="flex items-center gap-3 md:gap-5">
-        <!-- 修正：僅在螢幕寬度 < 1024px 時顯示目錄按鈕 (2欄狀態) -->
-        <button id="header-menu-toggle" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-dark-700 transition-colors text-sm font-medium text-gray-300 hover:text-white border border-dark-700 hover:border-dark-600 lg:hidden" aria-label="Toggle Sidebar">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-          <span>目錄</span>
-        </button>
-        <!-- 響應式標題：小螢幕預設內縮 -->
-        <h1 class="text-lg md:text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 hidden md:block">
-          VIDEO GALLERY
-        </h1>
-      </div>
+    <div class="flex pt-16 min-h-screen">
+        <aside id="sidebar" class="sidebar fixed lg:static inset-y-0 left-0 z-30 w-64 bg-gray-900 border-r border-gray-800 transform -translate-x-full lg:translate-x-0 h-[calc(100vh-4rem)] overflow-hidden">
+            <div class="h-full flex flex-col">
+                <div class="p-4 border-b border-gray-800 lg:hidden">
+                    <h2 class="text-lg font-bold text-white"><i class="fas fa-play-circle mr-2 text-cyan-400"></i>Video Gallery</h2>
+                </div>
+                <nav class="flex-1 overflow-y-auto custom-scrollbar p-4">
+                    <div class="mb-6">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">分類目錄</h3>
+                        <ul class="space-y-1">
+                            <li><a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"><i class="fas fa-home w-5"></i><span>全部影片</span></a></li>
+                            <li><a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"><i class="fas fa-fire w-5"></i><span>熱門精選</span></a></li>
+                            <li><a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"><i class="fas fa-clock w-5"></i><span>最新上傳</span></a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </aside>
+        
+        <div id="sidebarOverlay" class="sidebar-overlay fixed inset-0 bg-black/50 z-20 opacity-0 pointer-events-none lg:hidden"></div>
 
-      <!-- 右側：Email & 官方LINE -->
-      <div class="flex items-center gap-3 md:gap-5 text-sm font-medium">
-        <a href="mailto:app.coder99@gmail.com" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-dark-700 transition-colors text-gray-300 hover:text-white">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-          <span class="hidden sm:inline">Email</span>
-        </a>
-        <a href="https://page.line.me/078ntzqb" target="_blank" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-dark-700 transition-colors text-gray-300 hover:text-green-400">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19.333 3.866H4.667C3.635 3.866 2.8 4.68 2.8 5.68v8.64c0 1 .835 1.814 1.867 1.814h14.666c1.032 0 1.867-.814 1.867-1.814v-8.64c0-1-.835-1.814-1.867-1.814zM10.1 14.65h-1.2v-3.8l-1.6 2.4h-.6l-1.6-2.4v3.8H4v-5.1h1.2l1.9 2.7 1.9-2.7h1.1v5.1zm5.9 0h-1.2v-3.8l-1.6 2.4h-.6l-1.6-2.4v3.8h-1.2v-5.1h1.2l1.9 2.7 1.9-2.7h1.1v5.1zm5.7-5.1h-1.2v5.1h-1.2V9.55h-1.2v5.1H17V9.55h-1.2v5.1h-1.1V8.45h3.9v1.1z"/></svg>
-          <span class="hidden sm:inline">官方LINE</span>
-        </a>
-      </div>
+        <!-- Main Content -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8">
+            <div class="lg:hidden mb-6">
+                <h1 class="text-2xl font-bold text-white"><i class="fas fa-play-circle mr-2 text-cyan-400"></i>Video Gallery</h1>
+                <p class="text-gray-400 mt-1">探索精選影片內容</p>
+            </div>
+            <div class="masonry-grid" id="videoGallery">
+                <!-- 影片1 -->
+                <div class="masonry-item">
+                    <div class="video-container group cursor-pointer" data-video-id="1">
+                        <video muted loop playsinline preload="auto">
+                            <source src="video/KitCat貓糧電商影片.mp4" type="video/mp4">
+                        </video>
+                        <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">9:56</div>
+                        <div class="video-overlay">
+                            <span class="inline-block px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded mb-2">動畫</span>
+                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">Big Buck Bunny 是一部開源的動畫短片，講述了一隻大兔子與三隻討厭的齧齒動物之間的故事。這部影片展示了高品質的 3D 動畫技術。</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- 影片2 -->
+                <div class="masonry-item">
+                    <div class="video-container group cursor-pointer" data-video-id="2">
+                        <video muted loop playsinline preload="auto">
+                            <source src="video/電商產品主圖總集合.mp4" type="video/mp4">
+                        </video>
+                        <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">10:53</div>
+                        <div class="video-overlay">
+                            <span class="inline-block px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded mb-2">科幻</span>
+                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">Elephants Dream 是世界上第一部開源電影，由 Blender 基金會製作。這部科幻動畫探討了現實與夢境之間的模糊界線。</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- 影片3 -->
+                <div class="masonry-item">
+                    <div class="video-container group cursor-pointer" data-video-id="3">
+                        <video muted loop playsinline preload="auto">
+                            <source src="video/口紅電商短片.mp4" type="video/mp4">
+                        </video>
+                        <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">0:15</div>
+                        <div class="video-overlay">
+                            <span class="inline-block px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded mb-2">科技</span>
+                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">這是一部展示 Chromecast 功能的宣傳影片，呈現了如何將手機上的內容投射到大螢幕上觀看。影片風格活潑，色彩鮮豔。</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- 影片4 -->
+                <div class="masonry-item">
+                    <div class="video-container group cursor-pointer" data-video-id="4">
+                        <video muted loop playsinline preload="auto">
+                            <source src="video/換衣宣傳.mp4" type="video/mp4">
+                        </video>
+                        <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">0:15</div>
+                        <div class="video-overlay">
+                            <span class="inline-block px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded mb-2">旅遊</span>
+                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">Chromecast 宣傳系列影片之一，展示了使用 Chromecast 觀看旅行和冒險內容的體驗。影片畫質清晰。</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- 影片5 -->
+                <div class="masonry-item">
+                    <div class="video-container group cursor-pointer" data-video-id="5">
+                        <video muted loop playsinline preload="auto">
+                            <source src="video/運動鞋電商.mp4" type="video/mp4">
+                        </video>
+                        <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">0:15</div>
+                        <div class="video-overlay">
+                            <span class="inline-block px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded mb-2">娛樂</span>
+                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">這部短片展示了 Chromecast 如何讓家庭娛樂變得更加有趣。從遊戲到影片，大螢幕體驗讓每個人都能享受其中。</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- 影片6 -->
+                <div class="masonry-item">
+                    <div class="video-container group cursor-pointer" data-video-id="6">
+                        <video muted loop playsinline preload="auto">
+                            <source src="video/機器人電商宣傳.mp4" type="video/mp4">
+                        </video>
+                        <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">0:15</div>
+                        <div class="video-overlay">
+                            <span class="inline-block px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded mb-2">汽車</span>
+                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">Chromecast 系列宣傳影片，展示了汽車和駕駛相關內容的大螢幕觀看體驗。影片節奏明快。</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- 影片7 -->
+                <div class="masonry-item">
+                    <div class="video-container group cursor-pointer" data-video-id="7">
+                        <video muted loop playsinline preload="auto">
+                            <source src="video/工地喵打架.mp4" type="video/mp4">
+                        </video>
+                        <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">0:15</div>
+                        <div class="video-overlay">
+                            <span class="inline-block px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded mb-2">喜劇</span>
+                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">這部幽默的短片展示了當人們無法將內容投射到大螢幕時的沮喪情緒，突顯了 Chromecast 的價值。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-  </header>
 
-  <!-- 左側收合式目錄/選單 -->
-  <aside id="sidebar" class="sidebar fixed left-0 top-16 bottom-0 w-64 bg-dark-900 border-r border-dark-800 z-40 transform -translate-x-full lg:translate-x-0 shadow-xl">
-    <nav class="p-5 space-y-2">
-      <a href="#" class="block px-4 py-3 rounded-xl bg-dark-700 text-white font-semibold shadow-sm">🎬 全部影片</a>
-      <a href="#" class="block px-4 py-3 rounded-xl hover:bg-dark-700 transition-colors text-gray-400 hover:text-white">🌿 自然風景</a>
-      <a href="#" class="block px-4 py-3 rounded-xl hover:bg-dark-700 transition-colors text-gray-400 hover:text-white">🏙️ 城市生活</a>
-      <a href="#" class="block px-4 py-3 rounded-xl hover:bg-dark-700 transition-colors text-gray-400 hover:text-white">🎨 抽象藝術</a>
-      <a href="#" class="block px-4 py-3 rounded-xl hover:bg-dark-700 transition-colors text-gray-400 hover:text-white">🏄 運動與極限</a>
-      <a href="#" class="block px-4 py-3 rounded-xl hover:bg-dark-700 transition-colors text-gray-400 hover:text-white">🤖 科技與未來</a>
-      <a href="#" class="block px-4 py-3 rounded-xl hover:bg-dark-700 transition-colors text-gray-400 hover:text-white">🎭 人物專訪</a>
-      
-      <!--<div class="pt-4 mt-4 border-t border-dark-800">
-        <p class="px-4 text-xs text-gray-500 uppercase tracking-widest mb-2">快速連結</p>
-        <a href="menu.html" class="block px-4 py-2 text-sm text-blue-400 hover:text-blue-300 hover:underline transition-all">前往完整目錄頁面 →</a>
-      </div>-->
-	  
-    </nav>
-  </aside>
-
-  <!-- 收合觸發 Icon (僅在小螢幕顯示或用於手動控制) -->
-  <button id="floating-menu-toggle" class="fixed bottom-6 left-6 z-50 lg:hidden bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg transition-transform hover:scale-105 focus:outline-none" aria-label="Toggle Sidebar">
-    <svg id="icon-menu" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-    <svg id="icon-close" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-  </button>
-
-  <!-- Main Content -->
-  <main id="main" class="main-content flex-1 pt-20 lg:pl-64 px-4 md:px-8 pb-12">
-    <div class="masonry-grid max-w-7xl mx-auto">
-      
-      <!-- Video 1 -->
-      <article class="masonry-item group">
-        <div class="video-wrapper aspect-[3/4]">
-          <video loop muted playsinline preload="metadata" class="w-full h-full object-cover">
-            <source src="video/KitCat貓糧電商影片.mp4" type="video/mp4">
-          </video>
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-800 py-6 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-sm text-gray-500">&copy; 2024 Video Gallery. All rights reserved. | <span class="text-gray-400">極致美學設計</span></p>
         </div>
-        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
-看這隻布偶寶貝就知道！當它輕盈走來、專注品嚐的那一刻，每一口都是對「天然」的真心告白。Kit Cat幼貓&孕貓專用糧，嚴選新鮮魚肉、雞胸、豆腐與青菜等天然食材，0添加防腐劑、0人工香料，只為守護毛孩的敏感腸胃與成長需求。<br>
+    </footer>
 
-✨ 你家寶貝值得的3大理由：<br>
-✅ 專為幼貓&孕媽設計：高營養配方，支持發育黃金期，讓小生命活力滿滿！<br>
-✅ 看得見的真材實料：包裝上的魚、肉、蔬菜不是噱頭——每一顆糧都還原食材本味，貓咪一聞就上癮！<br>
-✅ 健康無負擔：天然無添加，遠離過敏危機，連挑剔的布偶貓都忍不住舔嘴回饋～<br>
+    <script>
+        // 側邊欄邏輯
+        const menuBtn = document.getElementById('menuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        let isSidebarOpen = false;
 
-現在下單，把「健康好食」帶回家，讓愛不將就！
-        </p>
-      </article>
-
-      <!-- Video 2 -->
-      <article class="masonry-item group">
-        <div class="video-wrapper aspect-video">
-          <video loop muted playsinline preload="metadata">
-            <source src="video/電商產品主圖總集合.mp4" type="video/mp4">
-          </video>
-        </div>
-        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
-          依托產品實物拍攝的高清原圖，借力前沿 AI 生成技術，對產品的展示角度進行智能優化調整，同時為其匹配契合電商場景的精美背景，最終打造出兼具視覺吸引力與商業實用性的優質圖片，完美適配電商平台主頁的展示需求，助力提升產品點擊率與轉化率。
-        </p>
-      </article>
-
-      <!-- Video 3 -->
-      <article class="masonry-item group">
-        <div class="video-wrapper aspect-[4/5]">
-          <video loop muted playsinline preload="metadata">
-            <source src="video/口紅電商短片.mp4" type="video/mp4">
-          </video>
-        </div>
-        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
-還在為口紅半天就脫妝煩惱嗎？
-時尚新色系口紅，以「16小時持色鎖妝」黑科技登場！<br>
-✨ 一擦上唇，時間為你停駐：<br>
-✅ 16小時持色不暈染：吃飯、喝咖啡、親吻都牢牢鎖色，告別補妝焦慮<br>
-✅ 絲絨柔光質地：輕盈不拔乾，一抹化開如雲朵般柔滑，雙唇瞬間豐盈立體<br>
-✅ 5大時髦色號：從氣質豆沙到復古紅棕，日常通勤、約會派對全場吸睛<br>
-
-看她們怎麼說？<br>
-▫️「早上塗完開會，下班後顏色還像剛畫好！」——職場OL<br>
-▫️「連喝三杯奶茶，杯緣都沒殘留，這波我站！」——美妝博主<br>
-▫️「絲絨質地超顯白，黃皮星人終於找到本命色！」——學生黨
-        </p>
-      </article>
-
-      <!-- Video 4 -->
-      <article class="masonry-item group">
-        <div class="video-wrapper aspect-square">
-          <video loop muted playsinline preload="metadata">
-            <source src="video/換衣宣傳.mp4" type="video/mp4">
-          </video>
-        </div>
-        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
-          影片以AI合成「雜誌封面」為背景，結合實拍模特與AI動態轉場，打造高級時尚感。AI自動優化服裝質感、光線與髮絲流動，讓黃色吊帶、米色睡衣組、紅色聯名衛衣等單品在「虛實交錯」中展現穿搭魅力。畫面穿插「手機拍攝介面」與「商品實物掛拍」，強化真實感與購買衝動。，提升轉化率。整體節奏快、畫面流暢，融合AI美學與電商技巧，讓每件單品都像走秀般吸睛。
-        </p>
-      </article>
-
-      <!-- Video 5 -->
-      <article class="masonry-item group">
-        <div class="video-wrapper aspect-[16/10]">
-          <video loop muted playsinline preload="metadata">
-            <source src="video/運動鞋電商.mp4" type="video/mp4">
-          </video>
-        </div>
-        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
-          結合AI動態合成與產品細節強化，展現女孩晨跑活力。開場柔光微笑引發共鳴，跑步鏡頭流暢自然，鞋款特寫突顯減震、透氣科技。AI優化背景與文字浮現「官方正品499」，沙地藍天襯托自由感。影片不只是賣鞋，更是鼓勵你邁向更大世界——用科技與情感打動人心，提升轉化力。適合抖音、小紅書等平台投放。
-        </p>
-      </article>
-
-      <!-- Video 6 -->
-      <article class="masonry-item group">
-        <div class="video-wrapper aspect-[3/5]">
-          <video loop muted playsinline preload="metadata">
-            <source src="video/機器人電商宣傳.mp4" type="video/mp4">
-          </video>
-        </div>
-        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
-          影片融合AI生成動態場景與實物拍攝，開場以粉紅漸層+柔光營造溫馨氛圍，AI動態追蹤機器人行走路徑，強化「智能互動」與「撒嬌陪伴」的親切感。中段切換「實物實拍」畫面，AI精準強化機械細節與LED表情變化，讓「有問必答」功能可視化。價格與保固資訊以動態浮現，搭配「先搶先得」促銷語，提升轉化。整體用AI提升畫質與節奏，讓科技感與親和力完美平衡，吸引年輕族群與家庭用戶。
-        </p>
-      </article>
-
-      <!-- Video 7 -->
-      <article class="masonry-item group">
-        <div class="video-wrapper aspect-video">
-          <video loop muted playsinline preload="metadata">
-            <source src="video/工地喵打架.mp4" type="video/mp4">
-          </video>
-        </div>
-        <p class="mt-4 text-sm text-gray-400 leading-relaxed px-1">
-          影片以AI合成技術打造「擬人化貓咪工地」，讓貓咪穿工裝、戴安全帽、推手推車，動作自然流暢。AI自動補光、調色與背景合成，營造真實工地氛圍。劇情以「貓咪被開除」為靈感出發點，搭配字幕對白，製造反差喜感。AI動態追蹤貓咪表情與肢體，強化戲劇張力。結尾「我們也不是好惹的」轉折，提升共鳴與分享意願。整體節奏快、畫面萌趣，適合社交平台傳播，兼具娛樂與品牌記憶點。
-        </p>
-      </article>
-
-
-
-
-
-
-
-
-
-	  
-	  
-	  
-	  
-	  
-    </div>
-  </main>
-
-  <!-- Bottom Footer -->
-  <footer class="bg-dark-900 border-t border-dark-800 py-8 text-center text-gray-500 text-sm lg:pl-64">
-    <p class="font-medium">© 2026 Video Gallery. All Rights Reserved.</p>
-    <!--<p class="mt-3 leading-relaxed">聯絡方式：mailto:app.coder99@gmail.com ｜ 官方LINE：@video_gallery</p>-->
-  </footer>
-
-  <script>
-    // DOM 元素抓取
-    const headerMenuToggle = document.getElementById('header-menu-toggle');
-    const floatingMenuToggle = document.getElementById('floating-menu-toggle');
-    const iconMenu = document.getElementById('icon-menu');
-    const iconClose = document.getElementById('icon-close');
-    const sidebar = document.getElementById('sidebar');
-    const main = document.getElementById('main');
-    const videos = document.querySelectorAll('video');
-
-    // 狀態管理
-    let isOpen = window.innerWidth >= 1024; // 桌面版預設展開，行動版預設收合
-
-    // 初始化 UI 狀態
-    function updateUI() {
-      if (isOpen) {
-        sidebar.classList.remove('-translate-x-full');
-        sidebar.classList.add('translate-x-0');
-        if(window.innerWidth < 1024) {
-          main.classList.add('ml-0'); // 行動版展開時不推擠主內容，改為浮層
-        } else {
-          main.classList.add('lg:pl-64'); // 桌面版恢復側邊欄間距
+        function toggleSidebar() {
+            isSidebarOpen = !isSidebarOpen;
+            if (isSidebarOpen) {
+                sidebar.classList.remove('-translate-x-full');
+                sidebarOverlay.classList.remove('opacity-0', 'pointer-events-none');
+                document.body.style.overflow = 'hidden';
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('opacity-0', 'pointer-events-none');
+                document.body.style.overflow = '';
+            }
         }
-        iconMenu.classList.add('hidden');
-        iconClose.classList.remove('hidden');
-      } else {
-        sidebar.classList.add('-translate-x-full');
-        sidebar.classList.remove('translate-x-0');
-        if(window.innerWidth < 1024) {
-          main.classList.remove('ml-0');
-        }
-        iconMenu.classList.remove('hidden');
-        iconClose.classList.add('hidden');
-      }
-    }
 
-    // 統一的選單切換函數
-    function toggleSidebar() {
-      isOpen = !isOpen;
-      updateUI();
-    }
+        menuBtn.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+        document.querySelectorAll('#sidebar a').forEach(link => {
+            link.addEventListener('click', () => { if (window.innerWidth < 1024) toggleSidebar(); });
+        });
 
-    // 頂部目錄按鈕點擊事件
-    headerMenuToggle?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleSidebar();
-    });
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024 && isSidebarOpen) {
+                sidebar.classList.remove('-translate-x-full');
+                sidebarOverlay.classList.add('opacity-0', 'pointer-events-none');
+                document.body.style.overflow = '';
+                isSidebarOpen = false;
+            }
+        });
 
-    // 浮動目錄按鈕點擊事件
-    floatingMenuToggle?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleSidebar();
-    });
+        // 滑鼠播放 / 離開暫停
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.video-container').forEach(container => {
+                const video = container.querySelector('video');
+                
+                // 頁面載入後強制顯示第一幀
+                video.currentTime = 0;
 
-    // 響應式斷點自動控制
-    window.addEventListener('resize', () => {
-      const isDesktop = window.innerWidth >= 1024; // 3欄/4欄 (1024px以上)
-      if (isDesktop) {
-        isOpen = true; // 大螢幕自動展開側邊欄
-      } else {
-        isOpen = false; // 小螢幕(2欄)自動收合側邊欄
-      }
-      updateUI();
-    });
-
-    // 點擊外部區域關閉側邊欄（行動版體驗優化）
-    document.addEventListener('click', (e) => {
-      if (!isOpen) return;
-      if (window.innerWidth >= 1024) return; // 桌面版保持展開
-      if (!sidebar.contains(e.target) && 
-          e.target !== headerMenuToggle && !headerMenuToggle?.contains(e.target) &&
-          e.target !== floatingMenuToggle && !floatingMenuToggle?.contains(e.target)) {
-        isOpen = false;
-        updateUI();
-      }
-    });
-
-    // 影片滑鼠滑過自動播放機制
-    videos.forEach(video => {
-      // 滑鼠進入播放
-      video.addEventListener('mouseenter', () => {
-        video.play().catch(() => {}); // 忽略瀏覽器阻擋 autoplay 的錯誤
-      });
-      // 滑鼠離開暫停
-      video.addEventListener('mouseleave', () => {
-        video.pause();
-      });
-      // 觸控支援（手機長按/點擊觸發）
-      video.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        video.play().catch(() => {});
-      });
-    });
-
-    // 頁面載入初始化
-    updateUI();
-  </script>
+                container.addEventListener('mouseenter', () => { 
+                    video.play().catch(e => {}); 
+                });
+                container.addEventListener('mouseleave', () => { 
+                    video.pause(); 
+                });
+            });
+        });
+    </script>
 </body>
 </html>
