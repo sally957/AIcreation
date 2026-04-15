@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* 原樣保留所有自定義樣式 */
         /* Custom scrollbar for sidebar */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
@@ -35,6 +36,76 @@
         .menu-btn { transition: all 0.3s ease; }
         .menu-btn:hover { transform: scale(1.05); }
         .sidebar-overlay { transition: opacity 0.3s ease; }
+
+        /* Video modal styles */
+        .video-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .video-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+        }
+        
+        .modal-video {
+            width: 100%;
+            height: auto;
+            max-height: 80vh;
+            border-radius: 0.5rem;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ef4444;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        
+        .close-btn:hover {
+            background-color: #dc2626;
+            transform: scale(1.1);
+        }
+        
+        /* Mobile touch feedback */
+        @media (max-width: 1024px) {
+            .video-container:active video {
+                transform: scale(1.02);
+            }
+            .video-container:active .video-overlay {
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen">
@@ -73,10 +144,12 @@
                 <nav class="flex-1 overflow-y-auto custom-scrollbar p-4">
                     <div class="mb-6">
                         <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">分類目錄</h3>
-                        <ul class="space-y-1">
-                            <li><a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"><i class="fas fa-home w-5"></i><span>全部影片</span></a></li>
-                            <li><a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"><i class="fas fa-fire w-5"></i><span>熱門精選</span></a></li>
-                            <li><a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"><i class="fas fa-clock w-5"></i><span>最新上傳</span></a></li>
+                        <ul class="space-y-1" id="categoryList">
+                            <!-- 為分類新增 data-category 屬性，標記對應的過濾值 -->
+                            <li><a href="#" class="category-link flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" data-category="all"><i class="fas fa-home w-5"></i><span>全部影片</span></a></li>
+                            <li><a href="#" class="category-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors" data-category="ComfyUI"><i class="fas fa-fire w-5"></i><span>ComfyUI</span></a></li>
+                            <li><a href="#" class="category-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors" data-category="Seedance"><i class="fas fa-clock w-5"></i><span>Seedance</span></a></li>
+							<li><a href="#" class="category-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors" data-category="Veo"><i class="fas fa-clock w-5"></i><span>Veo</span></a></li>
                         </ul>
                     </div>
                 </nav>
@@ -94,92 +167,144 @@
             <div class="masonry-grid" id="videoGallery">
                 <!-- 影片1 -->
                 <div class="masonry-item">
-                    <div class="video-container group cursor-pointer" data-video-id="1">
+                    <div class="video-container group cursor-pointer" data-video-id="1" data-video-src="video/KitCat貓糧電商影片.mp4">
                         <video muted loop playsinline preload="auto">
                             <source src="video/KitCat貓糧電商影片.mp4" type="video/mp4">
                         </video>
-                        <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">9:56</div>
                         <div class="video-overlay">
-                            <span class="inline-block px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded mb-2">動畫</span>
-                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">Big Buck Bunny 是一部開源的動畫短片，講述了一隻大兔子與三隻討厭的齧齒動物之間的故事。這部影片展示了高品質的 3D 動畫技術。</p>
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">ComfyUI</span>
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Seedance</span>
+							<span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Veo</span>
+							<p class="text-sm text-gray-200 leading-relaxed line-clamp-3">
+看這隻布偶寶貝就知道！當它輕盈走來、專注品嚐的那一刻，每一口都是對「天然」的真心告白。Kit Cat幼貓&孕貓專用糧，嚴選新鮮魚肉、雞胸、豆腐與青菜等天然食材，0添加防腐劑、0人工香料，只為守護毛孩的敏感腸胃與成長需求。<br>
+✨ 你家寶貝值得的3大理由：<br>
+✅ 專為幼貓&孕媽設計：高營養配方，支持發育黃金期，讓小生命活力滿滿！<br>
+✅ 看得見的真材實料：包裝上的魚、肉、蔬菜不是噱頭——每一顆糧都還原食材本味，貓咪一聞就上癮！<br>
+✅ 健康無負擔：天然無添加，遠離過敏危機，連挑剔的布偶貓都忍不住舔嘴回饋～<br>
+							</p>
                         </div>
                     </div>
                 </div>
                 <!-- 影片2 -->
                 <div class="masonry-item">
-                    <div class="video-container group cursor-pointer" data-video-id="2">
+                    <div class="video-container group cursor-pointer" data-video-id="2" data-video-src="video/電商產品主圖總集合.mp4">
                         <video muted loop playsinline preload="auto">
                             <source src="video/電商產品主圖總集合.mp4" type="video/mp4">
                         </video>
-                        <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">10:53</div>
                         <div class="video-overlay">
-                            <span class="inline-block px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded mb-2">科幻</span>
-                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">Elephants Dream 是世界上第一部開源電影，由 Blender 基金會製作。這部科幻動畫探討了現實與夢境之間的模糊界線。</p>
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">ComfyUI</span>
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Seedance</span>
+							<span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Veo</span>
+                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">
+          依托產品實物拍攝的高清原圖，借力前沿 AI 生成技術，對產品的展示角度進行智能優化調整，
+		  同時為其匹配契合電商場景的精美背景，最終打造出兼具視覺吸引力與商業實用性的優質圖片，
+		  完美適配電商平台主頁的展示需求，助力提升產品點擊率與轉化率。
+							</p>
                         </div>
                     </div>
                 </div>
                 <!-- 影片3 -->
                 <div class="masonry-item">
-                    <div class="video-container group cursor-pointer" data-video-id="3">
+                    <div class="video-container group cursor-pointer" data-video-id="3" data-video-src="video/口紅電商短片.mp4">
                         <video muted loop playsinline preload="auto">
                             <source src="video/口紅電商短片.mp4" type="video/mp4">
                         </video>
-                        <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">0:15</div>
                         <div class="video-overlay">
-                            <span class="inline-block px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded mb-2">科技</span>
-                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">這是一部展示 Chromecast 功能的宣傳影片，呈現了如何將手機上的內容投射到大螢幕上觀看。影片風格活潑，色彩鮮豔。</p>
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">ComfyUI</span>
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Seedance</span>
+							<span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Veo</span>
+                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">
+還在為口紅半天就脫妝煩惱嗎？
+時尚新色系口紅，以「16小時持色鎖妝」黑科技登場！<br>
+✨ 一擦上唇，時間為你停駐：<br>
+✅ 16小時持色不暈染：吃飯、喝咖啡、親吻都牢牢鎖色，告別補妝焦慮<br>
+✅ 絲絨柔光質地：輕盈不拔乾，一抹化開如雲朵般柔滑，雙唇瞬間豐盈立體<br>
+✅ 5大時髦色號：從氣質豆沙到復古紅棕，日常通勤、約會派對全場吸睛<br>
+
+看她們怎麼說？<br>
+▫️「早上塗完開會，下班後顏色還像剛畫好！」——職場OL<br>
+▫️「連喝三杯奶茶，杯緣都沒殘留，這波我站！」——美妝博主<br>
+▫️「絲絨質地超顯白，黃皮星人終於找到本命色！」——學生黨
+							</p>
                         </div>
                     </div>
                 </div>
                 <!-- 影片4 -->
                 <div class="masonry-item">
-                    <div class="video-container group cursor-pointer" data-video-id="4">
+                    <div class="video-container group cursor-pointer" data-video-id="4" data-video-src="video/換衣宣傳.mp4">
                         <video muted loop playsinline preload="auto">
                             <source src="video/換衣宣傳.mp4" type="video/mp4">
                         </video>
-                        <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">0:15</div>
                         <div class="video-overlay">
-                            <span class="inline-block px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded mb-2">旅遊</span>
-                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">Chromecast 宣傳系列影片之一，展示了使用 Chromecast 觀看旅行和冒險內容的體驗。影片畫質清晰。</p>
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">ComfyUI</span>
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Seedance</span>
+							<span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Veo</span>
+                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">
+          影片以AI合成「雜誌封面」為背景，結合實拍模特與AI動態轉場，打造高級時尚感。
+		  AI自動優化服裝質感、光線與髮絲流動，讓黃色吊帶、米色睡衣組、
+		  紅色聯名衛衣等單品在「虛實交錯」中展現穿搭魅力。畫面穿插「手機拍攝介面」
+		  與「商品實物掛拍」，強化真實感與購買衝動。，提升轉化率。整體節奏快、畫面流暢，
+		  融合AI美學與電商技巧，讓每件單品都像走秀般吸睛。
+							</p>
                         </div>
                     </div>
                 </div>
                 <!-- 影片5 -->
                 <div class="masonry-item">
-                    <div class="video-container group cursor-pointer" data-video-id="5">
+                    <div class="video-container group cursor-pointer" data-video-id="5" data-video-src="video/運動鞋電商.mp4">
                         <video muted loop playsinline preload="auto">
                             <source src="video/運動鞋電商.mp4" type="video/mp4">
                         </video>
-                        <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">0:15</div>
                         <div class="video-overlay">
-                            <span class="inline-block px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded mb-2">娛樂</span>
-                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">這部短片展示了 Chromecast 如何讓家庭娛樂變得更加有趣。從遊戲到影片，大螢幕體驗讓每個人都能享受其中。</p>
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">ComfyUI</span>
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Seedance</span>
+							<span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Veo</span>
+                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">
+          結合AI動態合成與產品細節強化，展現女孩晨跑活力。
+		  開場柔光微笑引發共鳴，跑步鏡頭流暢自然，鞋款特寫突顯減震、透氣科技。
+		  AI優化背景與文字浮現「官方正品499」，沙地藍天襯托自由感。
+		  影片不只是賣鞋，更是鼓勵你邁向更大世界——用科技與情感打動人心，提升轉化力。
+		  適合抖音、小紅書等平台投放。
+							</p>
                         </div>
                     </div>
                 </div>
                 <!-- 影片6 -->
                 <div class="masonry-item">
-                    <div class="video-container group cursor-pointer" data-video-id="6">
+                    <div class="video-container group cursor-pointer" data-video-id="6" data-video-src="video/機器人電商宣傳.mp4">
                         <video muted loop playsinline preload="auto">
                             <source src="video/機器人電商宣傳.mp4" type="video/mp4">
                         </video>
-                        <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">0:15</div>
                         <div class="video-overlay">
-                            <span class="inline-block px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded mb-2">汽車</span>
-                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">Chromecast 系列宣傳影片，展示了汽車和駕駛相關內容的大螢幕觀看體驗。影片節奏明快。</p>
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">ComfyUI</span>
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Seedance</span>
+							<span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Veo</span>
+                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">
+          影片融合AI生成動態場景與實物拍攝，開場以粉紅漸層+柔光營造溫馨氛圍，
+		  AI動態追蹤機器人行走路徑，強化「智能互動」與「撒嬌陪伴」的親切感。
+		  中段切換「實物實拍」畫面，AI精準強化機械細節與LED表情變化，讓「有問必答」功能可視化。
+		  價格與保固資訊以動態浮現，搭配「先搶先得」促銷語，提升轉化。
+		  整體用AI提升畫質與節奏，讓科技感與親和力完美平衡，吸引年輕族群與家庭用戶。
+							</p>
                         </div>
                     </div>
                 </div>
                 <!-- 影片7 -->
                 <div class="masonry-item">
-                    <div class="video-container group cursor-pointer" data-video-id="7">
+                    <div class="video-container group cursor-pointer" data-video-id="7" data-video-src="video/工地喵打架.mp4">
                         <video muted loop playsinline preload="auto">
                             <source src="video/工地喵打架.mp4" type="video/mp4">
                         </video>
-                        <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">0:15</div>
                         <div class="video-overlay">
-                            <span class="inline-block px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded mb-2">喜劇</span>
-                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">這部幽默的短片展示了當人們無法將內容投射到大螢幕時的沮喪情緒，突顯了 Chromecast 的價值。</p>
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">ComfyUI</span>
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Seedance</span>
+                            <p class="text-sm text-gray-200 leading-relaxed line-clamp-3">
+          影片以AI合成技術打造「擬人化貓咪工地」，讓貓咪穿工裝、戴安全帽、推手推車，
+		  動作自然流暢。AI自動補光、調色與背景合成，營造真實工地氛圍。
+		  劇情以「貓咪被開除」為靈感出發點，搭配字幕對白，製造反差喜感。
+		  AI動態追蹤貓咪表情與肢體，強化戲劇張力。結尾「我們也不是好惹的」轉折，
+		  提升共鳴與分享意願。整體節奏快、畫面萌趣，適合社交平台傳播，兼具娛樂與品牌記憶點。
+							</p>
                         </div>
                     </div>
                 </div>
@@ -187,10 +312,20 @@
         </main>
     </div>
 
+    <!-- Video Modal -->
+    <div id="videoModal" class="video-modal">
+        <div class="modal-content">
+            <button id="closeModalBtn" class="close-btn">
+                <i class="fas fa-times"></i>
+            </button>
+            <video id="modalVideo" class="modal-video" controls playsinline></video>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-gray-900 border-t border-gray-800 py-6 mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p class="text-center text-sm text-gray-500">&copy; 2024 Video Gallery. All rights reserved. | <span class="text-gray-400">極致美學設計</span></p>
+            <p class="text-center text-sm text-gray-500">&copy; 2026 Video Gallery. All rights reserved. | <span class="text-gray-400">極致美學設計</span></p>
         </div>
     </footer>
 
@@ -231,18 +366,103 @@
 
         // 滑鼠播放 / 離開暫停
         document.addEventListener('DOMContentLoaded', () => {
+            // ========== 新增：分類過濾核心邏輯 ==========
+            const categoryLinks = document.querySelectorAll('.category-link');
+            const videoItems = document.querySelectorAll('.masonry-item');
+            const activeClass = 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20';
+            const inactiveClass = 'text-gray-400 hover:bg-gray-800 hover:text-white transition-colors';
+
+            // 初始化分類點擊事件
+            categoryLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault(); // 阻止預設跳轉
+                    const targetCategory = link.getAttribute('data-category');
+                    
+                    // 更新分類按鈕樣式（高亮當前選中）
+                    categoryLinks.forEach(li => {
+                        li.className = `category-link flex items-center gap-3 px-3 py-2 rounded-lg ${li === link ? activeClass : inactiveClass}`;
+                    });
+
+                    // 過濾影片
+                    videoItems.forEach(item => {
+                        const videoTags = item.querySelectorAll('.video-tag');
+                        let hasCategory = false;
+
+                        // 遍歷影片的所有標籤，檢查是否包含目標分類
+                        videoTags.forEach(tag => {
+                            if (tag.textContent.trim() === targetCategory) {
+                                hasCategory = true;
+                            }
+                        });
+
+                        // 顯示/隱藏影片：all 顯示全部，否則只顯示匹配的
+                        if (targetCategory === 'all' || hasCategory) {
+                            item.style.display = 'block';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            // ========== 原有影片交互邏輯 ==========
             document.querySelectorAll('.video-container').forEach(container => {
                 const video = container.querySelector('video');
                 
                 // 頁面載入後強制顯示第一幀
                 video.currentTime = 0;
 
+                // 滑鼠滑過播放
                 container.addEventListener('mouseenter', () => { 
                     video.play().catch(e => {}); 
                 });
                 container.addEventListener('mouseleave', () => { 
                     video.pause(); 
                 });
+
+                // 點擊彈出視窗播放
+                container.addEventListener('click', () => {
+                    const videoSrc = container.getAttribute('data-video-src');
+                    const modal = document.getElementById('videoModal');
+                    const modalVideo = document.getElementById('modalVideo');
+                    
+                    // 設置彈出視窗影片源
+                    modalVideo.src = videoSrc;
+                    
+                    // 顯示彈出視窗並播放影片
+                    modal.classList.add('active');
+                    modalVideo.play();
+                    
+                    // 鎖定背景滾動
+                    document.body.style.overflow = 'hidden';
+                });
+            });
+
+            // 關閉彈出視窗
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const videoModal = document.getElementById('videoModal');
+            const modalVideo = document.getElementById('modalVideo');
+
+            // 點擊關閉按鈕
+            closeModalBtn.addEventListener('click', () => {
+                videoModal.classList.remove('active');
+                modalVideo.pause();
+                modalVideo.src = ''; // 清空影片源釋放資源
+                document.body.style.overflow = ''; // 解鎖背景滾動
+            });
+
+            // 點擊彈出視窗背景關閉
+            videoModal.addEventListener('click', (e) => {
+                if (e.target === videoModal) {
+                    closeModalBtn.click();
+                }
+            });
+
+            // ESC 鍵關閉彈出視窗
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && videoModal.classList.contains('active')) {
+                    closeModalBtn.click();
+                }
             });
         });
     </script>
