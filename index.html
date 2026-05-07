@@ -172,7 +172,21 @@
 			
 
 
-
+                <!-- 影片 -->
+                <div class="masonry-item">
+                    <div class="video-container group cursor-pointer">
+                        <video poster="video/你才是傻狗.jpg" muted loop playsinline preload="none" loading="lazy">
+                            <source src="video/你才是傻狗.mp4" type="video/mp4">
+                        </video>
+                        <div class="video-overlay">
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Seedance</span>
+							<span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">Kling</span>
+							<p class="text-sm text-gray-200 leading-relaxed line-clamp-3">
+課堂趣味小劇場😂Q 版李慕婉上課想換座位，沒想到旁邊柯基直接原地暴走回懟，最後只能無語扶頭徹底被打敗～<br>
+							</p>
+                        </div>
+                    </div>
+                </div>
 
 
 
@@ -1044,7 +1058,8 @@
             });
 
             // 預設顯示 ComfyUI 分類
-            filterVideos('Kling');
+            //filterVideos('ComfyUI');
+			filterVideos('Kling');
 
             // ========== 影片交互邏輯 ==========
             document.querySelectorAll('.video-container').forEach(container => {
