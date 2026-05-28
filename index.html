@@ -171,6 +171,20 @@
 			
 			
 
+                <!-- 影片 -->
+                <div class="masonry-item">
+                    <div class="video-container group cursor-pointer">
+                        <video poster="video/管道內視鏡產品短視頻.jpg" muted loop playsinline preload="none" loading="lazy">
+                            <source src="video/管道內視鏡產品短視頻.mp4" type="video/mp4">
+                        </video>
+                        <div class="video-overlay">
+                            <span class="video-tag inline-block px-2 py-1 bg-black/50 text-yellow-400 text-xs rounded mb-2">CapCut</span>
+							<p class="text-sm text-gray-200 leading-relaxed line-clamp-3">
+多功能管道內視鏡，輕鬆解決各類隱蔽檢測難題！機身小巧靈活，搭配高清防水探頭，可輕鬆深入管道縫隙、狹窄腔體、暗空死角，無需拆機、無需破拆，直觀看清內部堵塞、鏽蝕、裂紋、破損、積垢等細微問題。~~<br>
+							</p>
+                        </div>
+                    </div>
+                </div>
 
 
                 <!-- 影片 -->
@@ -1039,6 +1053,7 @@
 
             // 分類過濾函數
             function filterVideos(targetCategory) {
+			    console.log("最終分類：", initialCategory);
                 // 更新分類按鈕樣式
                 categoryLinks.forEach(link => {
                     link.className = `category-link flex items-center gap-3 px-3 py-2 rounded-lg ${link.getAttribute('data-category') === targetCategory ? activeClass : inactiveClass}`;
@@ -1091,7 +1106,6 @@ if (queryIndex !== -1) {
     }
 }
 
-console.log("最終分類：", initialCategory);
 filterVideos(initialCategory);
 
 
