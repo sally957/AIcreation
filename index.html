@@ -1036,22 +1036,6 @@
             const activeClass = 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20';
             const inactiveClass = 'text-gray-400 hover:bg-gray-800 hover:text-white transition-colors';
 
-// ==========  ==========
-const fullPath = window.location.href;
-let initialCategory = "Kling"; // 預設
-
-// 偵測 ? 
-const queryIndex = fullPath.indexOf('?');
-if (queryIndex !== -1) {
-    const categoryFromURL = fullPath.slice(queryIndex + 1).trim();
-    if (categoryFromURL) {
-        initialCategory = categoryFromURL;
-    }
-}
-
-console.log("最終分類：", initialCategory);
-filterVideos(initialCategory);
-
 
             // 分類過濾函數
             function filterVideos(targetCategory) {
@@ -1092,7 +1076,24 @@ filterVideos(initialCategory);
 
             // 預設顯示 ComfyUI 分類
             //filterVideos('ComfyUI');
-			filterVideos('Kling');
+			//filterVideos('Kling');
+
+// ==========  ==========
+const fullPath = window.location.href;
+let initialCategory = "Kling"; // 預設
+
+// 偵測 ?
+const queryIndex = fullPath.indexOf('?');
+if (queryIndex !== -1) {
+    const categoryFromURL = fullPath.slice(queryIndex + 1).trim();
+    if (categoryFromURL) {
+        initialCategory = categoryFromURL;
+    }
+}
+
+console.log("最終分類：", initialCategory);
+filterVideos(initialCategory);
+
 
             // ========== 影片交互邏輯 ==========
             document.querySelectorAll('.video-container').forEach(container => {
