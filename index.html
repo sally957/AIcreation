@@ -1036,12 +1036,21 @@
             const activeClass = 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20';
             const inactiveClass = 'text-gray-400 hover:bg-gray-800 hover:text-white transition-colors';
 
-    // ========== 核心：从网址 ?XXX 读取分类 ==========
-    const search = window.location.search.slice(1); // 去掉 ?
-    const initialCategory = search || 'Kling'; // 没有参数就默认 Kling
-    console.log("正在过滤：", search);
-    // 直接调用你的过滤！！！
-    filterVideos(initialCategory);
+// ==========  ==========
+const fullPath = window.location.href;
+let initialCategory = "Kling"; // 預設
+
+// 偵測 ? 
+const queryIndex = fullPath.indexOf('?');
+if (queryIndex !== -1) {
+    const categoryFromURL = fullPath.slice(queryIndex + 1).trim();
+    if (categoryFromURL) {
+        initialCategory = categoryFromURL;
+    }
+}
+
+console.log("最終分類：", initialCategory);
+filterVideos(initialCategory);
 
 
             // 分類過濾函數
